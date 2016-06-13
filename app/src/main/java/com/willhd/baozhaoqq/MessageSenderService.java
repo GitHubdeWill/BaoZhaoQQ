@@ -10,6 +10,7 @@ import android.content.ClipboardManager;
 import android.content.DialogInterface;
 import android.content.pm.PackageManager;
 import android.content.res.Resources;
+import android.os.Build;
 import android.os.Handler;
 import android.support.annotation.NonNull;
 import android.util.Log;
@@ -43,6 +44,9 @@ public class MessageSenderService extends AccessibilityService{
 
     @TargetApi(23)
     private boolean checkPermission() {
+        if(Build.VERSION.SDK_INT < Build.VERSION_CODES.M){
+            return true;
+        }
         try {
             int hasWriteEPermission = checkSelfPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE);
             if (hasWriteEPermission != PackageManager.PERMISSION_GRANTED) {
@@ -79,7 +83,7 @@ public class MessageSenderService extends AccessibilityService{
         if (info == null) return;
         if (info.getChildCount() == 0) {
             Log.d(TAG, "child:" + info.getClassName());
-            Log.d(TAG, "Dialog:" + info.canOpenPopup());
+            //Log.d(TAG, "Dialog:" + info.canOpenPopup());
             Log.d(TAG, "Text：" + info.getText());
             Log.d(TAG, "windowId:" + info.getWindowId());
             Log.d(TAG, "ViewId:" + info.getViewIdResourceName());
