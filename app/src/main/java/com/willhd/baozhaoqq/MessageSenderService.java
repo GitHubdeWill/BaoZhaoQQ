@@ -12,6 +12,7 @@ import android.content.pm.PackageManager;
 import android.content.res.Resources;
 import android.os.Build;
 import android.os.Handler;
+import android.os.StrictMode;
 import android.support.annotation.NonNull;
 import android.util.Log;
 import android.view.WindowManager;
@@ -39,6 +40,8 @@ public class MessageSenderService extends AccessibilityService{
 
     private AccessibilityNodeInfo rootNodeInfo;
     private Robot robot;
+    private long lastCheckedTime = 0;
+    private boolean shouldReload = false;
 
     private static boolean group_changed = true;
 
@@ -64,18 +67,28 @@ public class MessageSenderService extends AccessibilityService{
     @Override
     public void onAccessibilityEvent (AccessibilityEvent event) {
         Log.e(TAG, "Service Started");
+        Log.d(TAG, "Time last checked" + lastCheckedTime);
+        Log.d(TAG, "Time now:" + System.currentTimeMillis());
+        if (lastCheckedTime == 0) lastCheckedTime = System.currentTimeMillis();
         if (!checkPermission()) return;
-        if(robot == null) robot = new Robot();
+        if(robot == null || shouldReload) {
+            robot = new Robot();
+            shouldReload = false;
+        }
         this.rootNodeInfo = event.getSource();
         if (this.rootNodeInfo == null) return;
 
-        if((event.getEventType() == AccessibilityEvent.TYPE_WINDOW_CONTENT_CHANGED)){
+        if((event.getEventType() == AccessibilityEvent.TYPE_WINDOW_CONTENT_CHANGED) || (System.currentTimeMillis() != lastCheckedTime)){
             Log.e(TAG, "Ready to fetch");
             if (getRootInActiveWindow() != null) recycle(getRootInActiveWindow());
-
+            lastCheckedTime = System.currentTimeMillis();
         }
 
 
+    }
+
+    public void resetRobot() {
+        shouldReload = true;
     }
 
 

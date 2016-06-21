@@ -5,9 +5,12 @@ import android.content.ClipData;
 import android.content.ClipboardManager;
 import android.content.Context;
 import android.os.Environment;
+import android.os.SystemClock;
 import android.util.Log;
 import android.view.View;
 import android.view.accessibility.AccessibilityNodeInfo;
+
+import org.apache.http.params.HttpConnectionParams;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -17,8 +20,13 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
+import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.net.URLEncoder;
 import java.util.AbstractQueue;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -27,7 +35,10 @@ import java.util.PriorityQueue;
 import java.util.Queue;
 import java.util.Stack;
 import java.util.concurrent.ArrayBlockingQueue;
+import java.util.logging.Handler;
+import java.util.logging.LogRecord;
 import java.util.regex.Pattern;
+
 
 /**
  * Created by william on 5/26/16.
@@ -36,7 +47,7 @@ public class Robot{
     private final String TAG = "Robot";
     private final String QQ_BZ = "爆照!";
     private final String QQ_NAME_PAT = "[^`]{1,255}:";
-    private final String QQ_ADD_RESP = "#Add [^:]{1,255}::[^:]{1,255}";
+    private final String QQ_ADD_RESP = "Will:#add [^:]{1,255}::[^:]{1,255}";
     private final String QQ_NEWBIE = "[^`]{1,64} 已加入该群";
     private final String QQ_JIEXIN = "#接新\n[^#]{1,255}";
     private final String QQ_XUQIU = "#需求\n[^#]{1,255}";
@@ -45,10 +56,11 @@ public class Robot{
     private final String QQ_AD = "[^测^接^需]{0,255}[^\\.]{1,255}\\.[^\\.]{1,255}\\.[^\\.]{1,64}[^测^接^需]{0,255}";
     private final String QQ_XUAN = "[^测^接^需]{0,255}宣[^测^接^需]{0,255}";
     private final String QQ_NUM = "[^测^接^需]{0,255}[0-9]{7,255}[^测^接^需]{0,255}";
+    private final String QQ_TEACH = "说[^:]{1,255}";
+    private final String QQ_COMM = "Will:说[^:]{1,255}";
     private final String QQ_LINK = "[^测]{0,255}((?:(http|https|Http|Https|rtsp|Rtsp):\\/\\/(?:(?:[a-zA-Z0-9\\$\\-\\_\\.\\+\\!\\*\\'\\(\\)\\,\\;\\?\\&\\=]|(?:\\%[a-fA-F0-9]{2})){1,64}(?:\\:(?:[a-zA-Z0-9\\$\\-\\_\\.\\+\\!\\*\\'\\(\\)\\,\\;\\?\\&\\=]|(?:\\%[a-fA-F0-9]{2})){1,25})?\\@)?)?((?:(?:[a-zA-Z0-9][a-zA-Z0-9\\-]{0,64}\\.)+(?:(?:aero|arpa|asia|a[cdefgilmnoqrstuwxz])|(?:biz|b[abdefghijmnorstvwyz])|(?:cat|com|coop|c[acdfghiklmnoruvxyz])|d[ejkmoz]|(?:edu|e[cegrstu])|f[ijkmor]|(?:gov|g[abdefghilmnpqrstuwy])|h[kmnrtu]|(?:info|int|i[delmnoqrst])|(?:jobs|j[emop])|k[eghimnrwyz]|l[abcikrstuvy]|(?:mil|mobi|museum|m[acdghklmnopqrstuvwxyz])|(?:name|net|n[acefgilopruz])|(?:org|om)|(?:pro|p[aefghklmnrstwy])|qa|r[eouw]|s[abcdeghijklmnortuvyz]|(?:tel|travel|t[cdfghjklmnoprtvwz])|u[agkmsyz]|v[aceginu]|w[fs]|y[etu]|z[amw]))|(?:(?:25[0-5]|2[0-4][0-9]|[0-1][0-9]{2}|[1-9][0-9]|[1-9])\\.(?:25[0-5]|2[0-4][0-9]|[0-1][0-9]{2}|[1-9][0-9]|[1-9]|0)\\.(?:25[0-5]|2[0-4][0-9]|[0-1][0-9]{2}|[1-9][0-9]|[1-9]|0)\\.(?:25[0-5]|2[0-4][0-9]|[0-1][0-9]{2}|[1-9][0-9]|[0-9])))(?:\\:\\d{1,5})?)(\\/(?:(?:[a-zA-Z0-9\\;\\/\\?\\:\\@\\&\\=\\#\\~\\-\\.\\+\\!\\*\\'\\(\\)\\,\\_])|(?:\\%[a-fA-F0-9]{2}))*)?(?:\\b|$)[^测]{0,255}";
     private final String QQ_NAMEFORMAT = "[（\\(][^\\(^（^\\)）]{1,64}[）\\)][^\\(^\\)]{1,64}:";
     private final String QQ_HELP = "二狗";
-    private final String QQ_SEARCH = "[^~]{1,255}是什么？";
     private final String QQ_TIME = "[上下]午([0-2])[0-9]:[0-5][0-9]";
     private final String QQ_HELPS = "欢迎来到嘹亮古风交流群大家庭～\n" +
             "我是机器人小饭求眼熟～\n" +
@@ -57,21 +69,41 @@ public class Robot{
             "------找接新请输入：\n" +
             "找接新\n" +
             "------需要接新请严格按照以下格式发单：\n" +
+            "------*符号处填你的信息，\n" +
+            "------圈名后的等号一定要加！\n" +
             "#接新\n" +
-            "圈名=\n" +
-            "工种，个人联系及其他备注\n" +
+            "圈名：*=\n" +
+            "所接工种：*\n" +
+            "备注：*\n" +
+            "有无偿或工种互换：*\n" +
+            "工作效率：*\n" +
+            "QQ号码：*\n" +
+            "发布时间：*\n" +
             "------需要招人请严格按照以下格式发单：\n" +
+            "------*符号处填你的信息，\n" +
+            "------圈名后的等号一定要加！\n" +
             "#需求\n" +
-            "圈名=\n" +
-            "工种，个人联系及其他备注\n" +
+            "圈名：*=\n" +
+            "所需工种：*\n" +
+            "备注：*\n" +
+            "有无偿或工种互换：*\n" +
+            "工作效率：*\n" +
+            "QQ号码：*\n" +
+            "发布时间：*\n" +
             "------需要撤回接新请按照以下格式发：\n" +
+            "------*符号处填你的信息\n" +
             "#撤回接新\n" +
-            "圈名\n" +
+            "圈名：*\n" +
             "------需要撤回需求请按照以下格式发：\n" +
+            "------*符号处填你的信息\n" +
             "#撤回需求\n" +
-            "圈名\n";
+            "圈名：*";
     private final static String QQ_SEND = "发送";
     private final static String QQ_JINXUAN = "检测到宣传！\n本群禁宣请立即撤回！\n名片有宣传的改名片！\n重要的事情说两遍！";
+    private final static String QQ_SEARCH = "什么是[^`]{1,255}";
+    public final static long TIME = 300000;
+    private static int REC_SIZE = 15;
+    private static String searchWord = "";
 
     private MessageSenderService s;
 
@@ -84,12 +116,20 @@ public class Robot{
     private String lastKey = "";
     private boolean enabled = false;
     private boolean lastPaste = false;
+    private boolean clearing = false;
+    private long lastTime;
 
     private List<String> group_names;
     private HashMap<String, String> responses;
     private HashMap<String, String> needs;
     private HashMap<String, String> jiexins;
     private Queue<String> record;
+
+    private void initRecord(){
+        for (int i = 0; i < REC_SIZE; i++) {
+            record.add("init" + i);
+        }
+    }
 
     public Robot () {
         group_names = new ArrayList<>();
@@ -99,6 +139,7 @@ public class Robot{
         record = new ArrayBlockingQueue<>(30);
         s = new MessageSenderService();
         initRecord();
+        lastTime = System.currentTimeMillis();
 
         Log.e(TAG, "Start creating");
         String local_file = Environment.getExternalStorageDirectory().getAbsolutePath()+"/QQrobot";
@@ -224,14 +265,8 @@ public class Robot{
         }
     }
 
-    private void initRecord(){
-        for (int i = 0; i < 10; i++) {
-            record.add("init");
-        }
-    }
-
     private void setEnable () {
-        if (!pending && !record.contains("来嘞来嘞")) {
+        if (!record.contains("来嘞来嘞")) {
             busy = true;
             enabled = true;
             ClipboardManager mClipboard;
@@ -246,9 +281,10 @@ public class Robot{
         }
     }
     private void setDisable () {
-        if (!pending && !record.contains("不说了不说了")) {
+        if (!record.contains("不说了不说了")) {
             busy = true;
             enabled = false;
+            clearing = false;
             ClipboardManager mClipboard;
             mClipboard = (ClipboardManager) s.getSystemService(MessageSenderService.CLIPBOARD_SERVICE);
             ClipData mClip;
@@ -314,6 +350,7 @@ public class Robot{
             shouldWrite = true;
             busy = false;
         }
+        addToRecord(raw);
     }
     private void showResponse () {
         String raw = responses.toString();
@@ -344,6 +381,123 @@ public class Robot{
             shouldWrite = true;
             busy = false;
         }
+    }
+    private void shuaPing () {
+        String raw = "正在刷屏。。。\n停止刷屏请输入命令\n好了二狗不要再说了";
+        if (!pending && clearing) {
+            busy = true;
+            ClipboardManager mClipboard;
+            mClipboard = (ClipboardManager) s.getSystemService(MessageSenderService.CLIPBOARD_SERVICE);
+            ClipData mClip;
+            mClip = ClipData.newPlainText("list", raw);
+            mClipboard.setPrimaryClip(mClip);
+            Log.e(TAG, "Copied " + raw);
+            pending = true;
+            shouldWrite = true;
+            busy = false;
+        }
+    }
+    private void shuo (AccessibilityNodeInfo info) {
+        String raw = info.getText().toString().replace("^说", "");
+        if (Pattern.compile("[^#]{0,255}开饭[^#]{0,255}").matcher(raw).matches()) raw = "不许说我亲爱的主人！";
+        lastKey = raw;
+        Log.d(TAG, "saying " + raw);
+        if (!pending && !record.contains(raw) ) {
+            busy = true;
+            ClipboardManager mClipboard;
+            mClipboard = (ClipboardManager) s.getSystemService(MessageSenderService.CLIPBOARD_SERVICE);
+            ClipData mClip;
+            mClip = ClipData.newPlainText("shuo", raw);
+            mClipboard.setPrimaryClip(mClip);
+            Log.e(TAG, "Copied " + raw);
+            pending = true;
+            shouldWrite = true;
+            busy = false;
+        }
+        addToRecord(raw);
+    }
+    private void shuoMaster (AccessibilityNodeInfo info) {
+        String raw = info.getText().toString().replace("Will:说", "");
+        lastKey = raw;
+        Log.d(TAG, "saying " + raw);
+        if (!pending && !record.contains(raw) ) {
+            busy = true;
+            ClipboardManager mClipboard;
+            mClipboard = (ClipboardManager) s.getSystemService(MessageSenderService.CLIPBOARD_SERVICE);
+            ClipData mClip;
+            mClip = ClipData.newPlainText("shuo", raw);
+            mClipboard.setPrimaryClip(mClip);
+            Log.e(TAG, "Copied " + raw);
+            pending = true;
+            shouldWrite = true;
+            busy = false;
+        }
+        addToRecord(raw);
+    }
+    private Runnable downData = new Runnable() {
+        @Override
+        public void run() {
+            String result0 = "搜索！";
+            try {
+                URL url = new URL("http://hudong.cn/home/hudong/search.wml?word=" +
+                        URLEncoder.encode(searchWord, "UTF-8") + "&type=dict");
+                HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+                connection.setConnectTimeout(6*1000);
+                connection.setUseCaches(true);
+                connection.setRequestMethod("GET");
+                if (connection.getResponseCode() != 200)
+                    throw new RuntimeException("request failed");
+                InputStream is = connection.getInputStream();
+                BufferedReader r = new BufferedReader(new InputStreamReader(is));
+                StringBuilder sb = new StringBuilder();
+                String line;
+                while ((line = r.readLine()) != null) {
+                    sb.append(line + "\n");
+                }
+                Log.e(TAG, "Get word: "+ searchWord);
+                Log.e(TAG, "Get sb: "+ sb.toString());
+                result0 = sb.toString().split("<hr/>")[1].split("<br/>")[0];
+                if (result0.startsWith("<div")) result0 = result0.split("</div>")[1];
+            } catch (Exception e) {
+                Log.e(TAG, "Get fail" + e.toString());
+                result0 = "哇的一下就哭了இAஇ\n小饭居然不知道" + searchWord +"是什么..." +
+                        "\n或许我亲爱的主人知道";
+            }
+            searchDone(result0);
+        }
+    };
+    private void search (AccessibilityNodeInfo info) {
+        String raw = info.getText().toString().replace("什么是", "");
+        lastKey = "什么是" + raw;
+        Log.d(TAG, "searching " + raw);
+        if (!pending && !record.contains(raw) ) {
+            busy = true;
+            Log.e(TAG, "GET request");
+            searchWord = raw;
+            new Thread(downData).start();
+            ClipboardManager mClipboard;
+            mClipboard = (ClipboardManager) s.getSystemService(MessageSenderService.CLIPBOARD_SERVICE);
+            ClipData mClip;
+            mClip = ClipData.newPlainText("search", "收到!且容小饭思考一下哈...");
+            mClipboard.setPrimaryClip(mClip);
+            Log.e(TAG, "Copied " );
+            pending = true;
+            shouldWrite = true;
+            busy = false;
+        }
+        addToRecord(raw);
+    }
+    private void searchDone (String res){
+        busy = true;
+        ClipboardManager mClipboard;
+        mClipboard = (ClipboardManager) s.getSystemService(MessageSenderService.CLIPBOARD_SERVICE);
+        ClipData mClip;
+        mClip = ClipData.newPlainText("search", res);
+        mClipboard.setPrimaryClip(mClip);
+        Log.e(TAG, "Copied " + res);
+        pending = true;
+        shouldWrite = true;
+        busy = false;
     }
     private void findXQ () {
         String raw = needs.toString();
@@ -376,7 +530,7 @@ public class Robot{
         }
     }
     private void addResponse (AccessibilityNodeInfo info) {
-        String raw = info.getText().toString().replace("#Add ", "");
+        String raw = info.getText().toString().replace("Will:#add ", "");
         Log.e(TAG, "Adder discovered: " + raw);
         if (!responses.containsKey(raw.split("::")[0]) && !pending) {
             busy = true;
@@ -554,9 +708,10 @@ public class Robot{
         }
     }
     private void coldNotification () {
-        String raw = "冷场了好久好冷啊，多谢少侠来救场！";
-        if (!pending && !record.contains(raw)) {
+        String raw = "已经超过"+ TIME/1000 +"秒没人说话了！\n小饭我来暖一下场哈~\n有人想我吗？";
+        if (enabled) {
             busy = true;
+            lastTime = System.currentTimeMillis();
             ClipboardManager mClipboard;
             mClipboard = (ClipboardManager) s.getSystemService(MessageSenderService.CLIPBOARD_SERVICE);
             ClipData mClip;
@@ -584,6 +739,14 @@ public class Robot{
             busy = false;
         }
     }
+    private void addToRecord(String s) {
+        record.add(s);
+        lastTime = System.currentTimeMillis();
+        Log.d(TAG, "Queue Added " + s);
+        if (record.size() > 15) {
+            Log.d(TAG, "Queue Removed " + record.poll());
+        }
+    }
 
     public void onReceive (AccessibilityNodeInfo info, MessageSenderService mss){
         this.s = mss;
@@ -593,17 +756,10 @@ public class Robot{
             if (info.getClassName().toString().equals("android.widget.TextView")) {
                 //Reset
                 if (info.getText().toString().equals("~reset")){
-                    shouldWrite = false;
-                    shouldSend = false;
-                    pending = false;
-                    busy = false;
-                    lastKey = "";
-                    enabled = false;
-                    lastPaste = false;
-                    record.clear();
-                    initRecord();
+                    s.resetRobot();
                     Log.e(TAG, "Reset succeed");
                 }
+
                 if (!enabled) pending = false;
                 //set enabled
                 if (info.getText().toString().equals("二狗你过来一下") && !enabled) setEnable();
@@ -612,12 +768,18 @@ public class Robot{
                 if (Pattern.compile(QQ_NAME_PAT).matcher(info.getText().toString()).matches()) checkName(info);
                 //Welcome
                 if (Pattern.compile(QQ_NEWBIE).matcher(info.getText().toString()).matches()) welcomeNewbie(info);
-                //Warm up
-                //if (Pattern.compile(QQ_TIME).matcher(info.getText().toString()).matches()) coldNotification();
+                //Shuaping
+                if (info.getText().toString().equals("二狗来刷一下屏！")) clearing = true;
+                if (clearing) shuaPing();
                 //Check Ad
-                if (Pattern.compile(QQ_AD).matcher(info.getText().toString()).matches() && !record.contains(QQ_JINXUAN)) foundAd(info);
-                if (Pattern.compile(QQ_XUAN).matcher(info.getText().toString()).matches() && !record.contains(QQ_JINXUAN)) foundAd(info);
-                if (Pattern.compile(QQ_NUM).matcher(info.getText().toString()).matches() && !record.contains(QQ_JINXUAN)) foundAd(info);
+                //if (Pattern.compile(QQ_AD).matcher(info.getText().toString()).matches() && !record.contains(QQ_JINXUAN)) foundAd(info);
+                if (Pattern.compile(QQ_XUAN).matcher(info.getText().toString()).matches() && !record.contains(QQ_JINXUAN) &&
+                        !Pattern.compile(QQ_NAME_PAT).matcher(info.getText().toString()).matches()) foundAd(info);
+                //if (Pattern.compile(QQ_NUM).matcher(info.getText().toString()).matches() && !record.contains(QQ_JINXUAN)) foundAd(info);
+                //Teach
+                if (Pattern.compile(QQ_TEACH).matcher(info.getText().toString()).matches() && !info.getText().toString().equals(lastKey)) shuo(info);
+                if (Pattern.compile(QQ_COMM).matcher(info.getText().toString()).matches() && !info.getText().toString().equals(lastKey)) shuoMaster(info);
+                if (Pattern.compile(QQ_SEARCH).matcher(info.getText().toString()).matches() && !info.getText().toString().equals(lastKey)) search(info);
 
                 //show commands
                 if (info.getText().toString().equals("~show") && !record.contains("~show")) showResponse();
@@ -641,6 +803,22 @@ public class Robot{
                 if (Pattern.compile(QQ_RECALLJ).matcher(info.getText().toString()).matches()) recallJiexin(info);
             }
         }
+
+        //Add records
+        if (info.getClassName() != null && info.getText() != null) {
+            if (info.getClassName().toString().equals("android.widget.TextView") && !record.contains(info.getText().toString())) {
+                record.add(info.getText().toString());
+                lastTime = System.currentTimeMillis();
+                Log.d(TAG, "Time renewed to" + lastTime);
+                Log.d(TAG, "Queue Added " + info.getText().toString());
+                if (record.size() > REC_SIZE) {
+                    Log.d(TAG, "Queue Removed " + record.poll());
+                }
+            }
+        }
+
+        //Warm up
+        if (System.currentTimeMillis() - lastTime >= TIME) coldNotification();
 
         //Paste from Clipboard
         if (info.getClassName() != null && info.getText() != null) {
@@ -667,15 +845,5 @@ public class Robot{
             }
         }
 
-        //Add records
-        if (info.getClassName() != null && info.getText() != null) {
-            if (info.getClassName().toString().equals("android.widget.TextView") && !record.contains(info.getText().toString())) {
-                record.add(info.getText().toString());
-                Log.d(TAG, "Queue Added " + info.getText().toString());
-                if (record.size() > 15) {
-                    Log.d(TAG, "Queue Removed " + record.poll());
-                }
-            }
-        }
     }
 }
