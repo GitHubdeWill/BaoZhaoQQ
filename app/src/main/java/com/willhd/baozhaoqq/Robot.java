@@ -8,6 +8,7 @@ import android.os.Environment;
 import android.os.SystemClock;
 import android.util.Log;
 import android.view.View;
+import android.view.accessibility.AccessibilityEvent;
 import android.view.accessibility.AccessibilityNodeInfo;
 
 import org.apache.http.params.HttpConnectionParams;
@@ -39,13 +40,14 @@ import java.util.logging.Handler;
 import java.util.logging.LogRecord;
 import java.util.regex.Pattern;
 
+import javax.crypto.AEADBadTagException;
+
 
 /**
  * Created by william on 5/26/16.
  */
 public class Robot{
     private final String TAG = "Robot";
-    private final String QQ_BZ = "爆照!";
     private final String QQ_NAME_PAT = "[^`]{1,255}:";
     private final String QQ_ADD_RESP = "Will:#add [^:]{1,255}::[^:]{1,255}";
     private final String QQ_NEWBIE = "[^`]{1,64} 已加入该群";
@@ -53,12 +55,13 @@ public class Robot{
     private final String QQ_XUQIU = "#需求\n[^#]{1,255}";
     private final String QQ_RECALLN = "#撤回需求\n[^#]{1,255}";
     private final String QQ_RECALLJ = "#撤回接新\n[^#]{1,255}";
-    private final String QQ_AD = "[^测^接^需]{0,255}[^\\.]{1,255}\\.[^\\.]{1,255}\\.[^\\.]{1,64}[^测^接^需]{0,255}";
+    private final String QQ_AD = "[^测^接^需]{0,255}[a-zA-Z0-9]{1,255}\\.[a-zA-Z0-9]{1,255}\\.[a-zA-Z0-9]{1,64}[^测^接^需]{0,255}";
     private final String QQ_XUAN = "[^测^接^需]{0,255}宣[^测^接^需]{0,255}";
     private final String QQ_NUM = "[^测^接^需]{0,255}[0-9]{7,255}[^测^接^需]{0,255}";
     private final String QQ_TEACH = "说[^:]{1,255}";
+    private final String QQ_ENG = "小饭[a-zA-Z0-9 ,\\.\\?!']{1,64}";
+    private final String QQ_CHN = "[^测]{0,255}[\\u4e00-\\u9fa5]{1,255}[^测]{0,255}";
     private final String QQ_COMM = "Will:说[^:]{1,255}";
-    private final String QQ_LINK = "[^测]{0,255}((?:(http|https|Http|Https|rtsp|Rtsp):\\/\\/(?:(?:[a-zA-Z0-9\\$\\-\\_\\.\\+\\!\\*\\'\\(\\)\\,\\;\\?\\&\\=]|(?:\\%[a-fA-F0-9]{2})){1,64}(?:\\:(?:[a-zA-Z0-9\\$\\-\\_\\.\\+\\!\\*\\'\\(\\)\\,\\;\\?\\&\\=]|(?:\\%[a-fA-F0-9]{2})){1,25})?\\@)?)?((?:(?:[a-zA-Z0-9][a-zA-Z0-9\\-]{0,64}\\.)+(?:(?:aero|arpa|asia|a[cdefgilmnoqrstuwxz])|(?:biz|b[abdefghijmnorstvwyz])|(?:cat|com|coop|c[acdfghiklmnoruvxyz])|d[ejkmoz]|(?:edu|e[cegrstu])|f[ijkmor]|(?:gov|g[abdefghilmnpqrstuwy])|h[kmnrtu]|(?:info|int|i[delmnoqrst])|(?:jobs|j[emop])|k[eghimnrwyz]|l[abcikrstuvy]|(?:mil|mobi|museum|m[acdghklmnopqrstuvwxyz])|(?:name|net|n[acefgilopruz])|(?:org|om)|(?:pro|p[aefghklmnrstwy])|qa|r[eouw]|s[abcdeghijklmnortuvyz]|(?:tel|travel|t[cdfghjklmnoprtvwz])|u[agkmsyz]|v[aceginu]|w[fs]|y[etu]|z[amw]))|(?:(?:25[0-5]|2[0-4][0-9]|[0-1][0-9]{2}|[1-9][0-9]|[1-9])\\.(?:25[0-5]|2[0-4][0-9]|[0-1][0-9]{2}|[1-9][0-9]|[1-9]|0)\\.(?:25[0-5]|2[0-4][0-9]|[0-1][0-9]{2}|[1-9][0-9]|[1-9]|0)\\.(?:25[0-5]|2[0-4][0-9]|[0-1][0-9]{2}|[1-9][0-9]|[0-9])))(?:\\:\\d{1,5})?)(\\/(?:(?:[a-zA-Z0-9\\;\\/\\?\\:\\@\\&\\=\\#\\~\\-\\.\\+\\!\\*\\'\\(\\)\\,\\_])|(?:\\%[a-fA-F0-9]{2}))*)?(?:\\b|$)[^测]{0,255}";
     private final String QQ_NAMEFORMAT = "[（\\(][^\\(^（^\\)）]{1,64}[）\\)][^\\(^\\)]{1,64}:";
     private final String QQ_HELP = "二狗";
     private final String QQ_TIME = "[上下]午([0-2])[0-9]:[0-5][0-9]";
@@ -99,11 +102,13 @@ public class Robot{
             "#撤回需求\n" +
             "圈名：*";
     private final static String QQ_SEND = "发送";
-    private final static String QQ_JINXUAN = "检测到宣传！\n本群禁宣请立即撤回！\n名片有宣传的改名片！\n重要的事情说两遍！";
+    private final static String QQ_JINXUAN = "检测到宣传！\n本群禁宣请立即撤回！";
     private final static String QQ_SEARCH = "什么是[^`]{1,255}";
+    private final static String QQ_ADMIN = "小饭管理群-[^:]{1,64}:[^`]{1,255}";
     public final static long TIME = 300000;
     private static int REC_SIZE = 15;
     private static String searchWord = "";
+    private static String question = "";
 
     private MessageSenderService s;
 
@@ -398,7 +403,7 @@ public class Robot{
         }
     }
     private void shuo (AccessibilityNodeInfo info) {
-        String raw = info.getText().toString().replace("^说", "");
+        String raw = info.getText().toString().replaceFirst("说", "");
         if (Pattern.compile("[^#]{0,255}开饭[^#]{0,255}").matcher(raw).matches()) raw = "不许说我亲爱的主人！";
         lastKey = raw;
         Log.d(TAG, "saying " + raw);
@@ -434,19 +439,40 @@ public class Robot{
         }
         addToRecord(raw);
     }
-    private Runnable downData = new Runnable() {
+    private void shuoAdmin (String cont){
+        String raw = cont.replaceFirst("说", "");
+        lastKey = raw;
+        Log.d(TAG, "saying " + raw);
+        if (!pending && !record.contains(raw) ) {
+            busy = true;
+            ClipboardManager mClipboard;
+            mClipboard = (ClipboardManager) s.getSystemService(MessageSenderService.CLIPBOARD_SERVICE);
+            ClipData mClip;
+            mClip = ClipData.newPlainText("shuo", raw);
+            mClipboard.setPrimaryClip(mClip);
+            Log.e(TAG, "Copied " + raw);
+            pending = true;
+            shouldWrite = true;
+            busy = false;
+        }
+        addToRecord(raw);
+    }
+    private Runnable downChat = new Runnable() {
         @Override
         public void run() {
-            String result0 = "搜索！";
+            String result1 = "I can't answer it.";
             try {
-                URL url = new URL("http://hudong.cn/home/hudong/search.wml?word=" +
-                        URLEncoder.encode(searchWord, "UTF-8") + "&type=dict");
+                URL url = new URL("https://kakko.pandorabots.com/pandora/talk?botid=f326d0be8e345a13&amp;skin=chat");
                 HttpURLConnection connection = (HttpURLConnection) url.openConnection();
                 connection.setConnectTimeout(6*1000);
                 connection.setUseCaches(true);
-                connection.setRequestMethod("GET");
-                if (connection.getResponseCode() != 200)
-                    throw new RuntimeException("request failed");
+                connection.setDoOutput(true);
+                connection.setRequestMethod("POST");
+
+                PrintWriter pw = new PrintWriter(connection.getOutputStream());
+                pw.print("botcust2=90d4108dfe017b14&message="+question);
+                pw.flush();
+                pw.close();
                 InputStream is = connection.getInputStream();
                 BufferedReader r = new BufferedReader(new InputStreamReader(is));
                 StringBuilder sb = new StringBuilder();
@@ -456,12 +482,59 @@ public class Robot{
                 }
                 Log.e(TAG, "Get word: "+ searchWord);
                 Log.e(TAG, "Get sb: "+ sb.toString());
-                result0 = sb.toString().split("<hr/>")[1].split("<br/>")[0];
-                if (result0.startsWith("<div")) result0 = result0.split("</div>")[1];
-            } catch (Exception e) {
-                Log.e(TAG, "Get fail" + e.toString());
-                result0 = "哇的一下就哭了இAஇ\n小饭居然不知道" + searchWord +"是什么..." +
-                        "\n或许我亲爱的主人知道";
+                try {
+                    result1 = sb.toString().split("<B>Mitsuku:</B>")[1].split("<br>")[0];
+                } catch (ArrayIndexOutOfBoundsException e) {
+                    result1 = "哇的一下就哭了இAஇ\n小饭居然不知道怎么回答...";
+                }
+            } catch (ArrayIndexOutOfBoundsException e) {
+                result1 = "哇的一下就哭了இAஇ\n小饭居然不知道怎么回答...";
+            } catch (Exception e2) {
+                Log.e(TAG, "Get fail" + e2.toString());
+                result1 = "哇的一下就哭了இAஇ\n小饭居然出错了！\n快带着错误信息：" + e2.toString() +"\n找我主人";
+            }
+            askDone(result1);
+        }
+    };
+
+    private Runnable downData = new Runnable() {
+        @Override
+        public void run() {
+            String result0 = "搜索！";
+            try {
+                URL url = new URL("http://hudong.cn/home/hudong/search.wml?word=" +
+                        URLEncoder.encode(searchWord, "UTF-8") + "&type=dict");
+                HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+                connection.setConnectTimeout(6 * 1000);
+                connection.setUseCaches(true);
+                connection.setRequestMethod("GET");
+                if (connection.getResponseCode() != 200)
+                    throw new IOException("request failed");
+                InputStream is = connection.getInputStream();
+                BufferedReader r = new BufferedReader(new InputStreamReader(is));
+                StringBuilder sb = new StringBuilder();
+                String line;
+                while ((line = r.readLine()) != null) {
+                    sb.append(line + "\n");
+                }
+                Log.e(TAG, "Get word: " + searchWord);
+                Log.e(TAG, "Get sb: " + sb.toString());
+                try {
+                    result0 = sb.toString().split("<hr/>")[1].split("<br/>")[0];
+                    if (result0.startsWith("<div")) result0 = result0.split("</div>")[1];
+                } catch (ArrayIndexOutOfBoundsException e) {
+                    Log.e(TAG, "Get sb2: " + sb.toString().split("<hr/>")[1].split("<br/>")[1]);
+                    if (sb.toString().split("<hr/>")[1].split("<br/>")[1] == null ||
+                            sb.toString().split("<hr/>")[1].split("<br/>")[1].trim().equals(""))
+                        result0 = "哇的一下就哭了இAஇ\n小饭居然不知道" + searchWord + "是什么...";
+                    else
+                        result0 = "小饭觉得你找的是这个:\n" + sb.toString().split("<hr/>")[1].split("<br/>")[1];
+                }
+            } catch (ArrayIndexOutOfBoundsException e) {
+                result0 = "哇的一下就哭了இAஇ\n小饭居然不知道" + searchWord + "是什么...";
+            } catch (IOException e2) {
+                Log.e(TAG, "Get fail" + e2.toString());
+                result0 = "哇的一下就哭了இAஇ\n小饭居然出错了！\n快带着错误信息：\n" + e2.toString() +"\n找我主人";
             }
             searchDone(result0);
         }
@@ -470,7 +543,7 @@ public class Robot{
         String raw = info.getText().toString().replace("什么是", "");
         lastKey = "什么是" + raw;
         Log.d(TAG, "searching " + raw);
-        if (!pending && !record.contains(raw) ) {
+        if (!pending && !record.contains(lastKey) ) {
             busy = true;
             Log.e(TAG, "GET request");
             searchWord = raw;
@@ -478,14 +551,35 @@ public class Robot{
             ClipboardManager mClipboard;
             mClipboard = (ClipboardManager) s.getSystemService(MessageSenderService.CLIPBOARD_SERVICE);
             ClipData mClip;
-            mClip = ClipData.newPlainText("search", "收到!且容小饭思考一下哈...");
+            mClip = ClipData.newPlainText("search", raw + "?且容小饭思考一下哈...");
             mClipboard.setPrimaryClip(mClip);
             Log.e(TAG, "Copied " );
             pending = true;
             shouldWrite = true;
             busy = false;
         }
-        addToRecord(raw);
+        addToRecord(lastKey);
+    }
+    private void ask (AccessibilityNodeInfo info) {
+        String raw = info.getText().toString().replaceFirst("小饭", "");
+        lastKey = info.getText().toString();
+        Log.d(TAG, "asking " + raw);
+        if (!pending && !record.contains(lastKey) ) {
+            busy = true;
+            Log.e(TAG, "POST request");
+            question = raw;
+            new Thread(downChat).start();
+            ClipboardManager mClipboard;
+            mClipboard = (ClipboardManager) s.getSystemService(MessageSenderService.CLIPBOARD_SERVICE);
+            ClipData mClip;
+            mClip = ClipData.newPlainText("chat", "Let me think...");
+            mClipboard.setPrimaryClip(mClip);
+            Log.e(TAG, "Copied " );
+            pending = true;
+            shouldWrite = true;
+            busy = false;
+        }
+        addToRecord(lastKey);
     }
     private void searchDone (String res){
         busy = true;
@@ -499,6 +593,18 @@ public class Robot{
         shouldWrite = true;
         busy = false;
     }
+    private void askDone (String res){
+            busy = true;
+            ClipboardManager mClipboard;
+            mClipboard = (ClipboardManager) s.getSystemService(MessageSenderService.CLIPBOARD_SERVICE);
+            ClipData mClip;
+            mClip = ClipData.newPlainText("search", res);
+            mClipboard.setPrimaryClip(mClip);
+            Log.e(TAG, "Copied " + res);
+            pending = true;
+            shouldWrite = true;
+            busy = false;
+        }
     private void findXQ () {
         String raw = needs.toString();
         if (!pending && !record.contains(raw)) {
@@ -721,6 +827,7 @@ public class Robot{
             pending = true;
             shouldWrite = true;
             busy = false;
+            s.onAccessibilityEvent(AccessibilityEvent.obtain(AccessibilityEvent.TYPE_WINDOW_CONTENT_CHANGED));
         }
     }
     private void foundAd (AccessibilityNodeInfo info) {
@@ -738,6 +845,7 @@ public class Robot{
             shouldWrite = true;
             busy = false;
         }
+        addToRecord(QQ_JINXUAN);
     }
     private void addToRecord(String s) {
         record.add(s);
@@ -773,13 +881,25 @@ public class Robot{
                 if (clearing) shuaPing();
                 //Check Ad
                 //if (Pattern.compile(QQ_AD).matcher(info.getText().toString()).matches() && !record.contains(QQ_JINXUAN)) foundAd(info);
-                if (Pattern.compile(QQ_XUAN).matcher(info.getText().toString()).matches() && !record.contains(QQ_JINXUAN) &&
-                        !Pattern.compile(QQ_NAME_PAT).matcher(info.getText().toString()).matches()) foundAd(info);
+                //if (Pattern.compile(QQ_XUAN).matcher(info.getText().toString()).matches() && !record.contains(QQ_JINXUAN)
+                //        && !Pattern.compile(QQ_NAME_PAT).matcher(info.getText().toString()).matches()) foundAd(info);
                 //if (Pattern.compile(QQ_NUM).matcher(info.getText().toString()).matches() && !record.contains(QQ_JINXUAN)) foundAd(info);
                 //Teach
-                if (Pattern.compile(QQ_TEACH).matcher(info.getText().toString()).matches() && !info.getText().toString().equals(lastKey)) shuo(info);
-                if (Pattern.compile(QQ_COMM).matcher(info.getText().toString()).matches() && !info.getText().toString().equals(lastKey)) shuoMaster(info);
-                if (Pattern.compile(QQ_SEARCH).matcher(info.getText().toString()).matches() && !info.getText().toString().equals(lastKey)) search(info);
+                if (Pattern.compile(QQ_ENG).matcher(info.getText().toString()).matches()
+                        && !info.getText().toString().equals(lastKey)) ask(info);
+                if (Pattern.compile(QQ_TEACH).matcher(info.getText().toString()).matches()
+                        && !info.getText().toString().equals(lastKey)) shuo(info);
+                if (Pattern.compile(QQ_COMM).matcher(info.getText().toString()).matches()
+                        && !info.getText().toString().equals(lastKey)) shuoMaster(info);
+                if (Pattern.compile(QQ_SEARCH).matcher(info.getText().toString()).matches()
+                        && !info.getText().toString().equals(lastKey)) search(info);
+
+                if (Pattern.compile(QQ_ADMIN).matcher(info.getText().toString()).matches()
+                        && !info.getText().toString().equals(lastKey)) {
+                    String comm = info.getText().toString().split(":")[1];
+                    if (Pattern.compile(QQ_TEACH).matcher(comm).matches()) shuoAdmin(comm);
+                }
+
 
                 //show commands
                 if (info.getText().toString().equals("~show") && !record.contains("~show")) showResponse();
@@ -792,7 +912,8 @@ public class Robot{
                 //Add response
                 if (Pattern.compile(QQ_ADD_RESP).matcher(info.getText().toString()).matches()) addResponse(info);
                 //send response
-                if (responses.containsKey(info.getText().toString()) && !info.getText().toString().equals(lastKey)) sendResponse(info);
+                if (responses.containsKey(info.getText().toString())
+                        && !info.getText().toString().equals(lastKey)) sendResponse(info);
                 //Jiexin
                 if (Pattern.compile(QQ_JIEXIN).matcher(info.getText().toString()).matches()) addJiexin(info);
                 //Xuqiu
@@ -806,7 +927,8 @@ public class Robot{
 
         //Add records
         if (info.getClassName() != null && info.getText() != null) {
-            if (info.getClassName().toString().equals("android.widget.TextView") && !record.contains(info.getText().toString())) {
+            if (info.getClassName().toString().equals("android.widget.TextView")
+                    && !record.contains(info.getText().toString())) {
                 record.add(info.getText().toString());
                 lastTime = System.currentTimeMillis();
                 Log.d(TAG, "Time renewed to" + lastTime);
@@ -817,12 +939,11 @@ public class Robot{
             }
         }
 
-        //Warm up
-        if (System.currentTimeMillis() - lastTime >= TIME) coldNotification();
 
         //Paste from Clipboard
         if (info.getClassName() != null && info.getText() != null) {
-            if (info.getClassName().toString().equals("android.widget.EditText") && shouldWrite && !busy && (enabled || lastPaste)) {
+            if (info.getClassName().toString().equals("android.widget.EditText")
+                    && shouldWrite && !busy && (enabled || lastPaste)) {
                 busy = true;
                 info.performAction(AccessibilityNodeInfo.ACTION_PASTE);
                 Log.e(TAG, "Pasted");
@@ -834,7 +955,9 @@ public class Robot{
 
         //Click send
         if (info.getClassName() != null && info.getText() != null) {
-            if (info.getClassName().toString().equals("android.widget.Button") && info.getText().toString().equals(QQ_SEND) && shouldSend && !busy && (enabled || lastPaste)) {
+            if (info.getClassName().toString().equals("android.widget.Button")
+                    && info.getText().toString().equals(QQ_SEND)
+                    && shouldSend && !busy && (enabled || lastPaste)) {
                 busy = true;
                 info.performAction(AccessibilityNodeInfo.ACTION_CLICK);
                 Log.e(TAG, "Sent");
@@ -845,5 +968,7 @@ public class Robot{
             }
         }
 
+        //Warm up
+        if (System.currentTimeMillis() - lastTime >= TIME) coldNotification();
     }
 }
