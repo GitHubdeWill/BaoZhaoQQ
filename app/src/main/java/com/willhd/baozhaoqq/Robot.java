@@ -64,6 +64,7 @@ public class Robot{
     private final String QQ_RBLACKLIST = "移除黑名单[^:]{1,255}";
     private final String QQ_ENG = "小饭[a-zA-Z0-9 ,\\.\\?!'-]{1,64}";
     private final String QQ_COMM = "Will:说[^:]{1,255}";
+    private final String QQ_CIRNAME = "圈名[:：][^:]{1,64}";
     //private final String QQ_RECOVER = "Will:[^:]{1,255}";
     private final String QQ_NAMEFORMAT = "[（\\(][^\\(^（^\\)）]{1,64}[）\\)][^\\(^\\)]{1,64}:";
     private final String QQ_HELP = "二狗";
@@ -71,47 +72,56 @@ public class Robot{
     private final String QQ_JINXUAN = "检测到宣传！\n本群禁宣请立即撤回！";
     private final String QQ_SEARCH = "什么是[^`]{1,255}";
     private final String QQ_ADMIN = "饭管理群-[^:]{1,64}:[^`]{1,255}";
-    private final String QQ_FINDJX = "查找接新[^~]{1,255}";
-    private final String QQ_FINDXQ = "查找需求[^~]{1,255}";
+    private final String QQ_FINDJX = "查找接新[^:]{1,255}";
+    private final String QQ_FINDXQ = "查找需求[^:]{1,255}";
 
     //private final String QQ_TIME = "[上下]午([0-2])[0-9]:[0-5][0-9]";
 
     private final String QQ_HELPS = "欢迎来到嘹亮古风交流群大家庭～\n" +
-            "我是机器人小饭求眼熟～\n" +
-            "------找需求请输入：\n" +
+            "我是机器人小饭求眼熟～\n\n" +
+            "------找需求可输入以下两条命令\n" +
+            "------*号处填写工种并删掉*号！\n" +
             "找需求\n" +
-            "------找接新请输入：\n" +
+            "查找需求*\n" +
+            "------找接新可输入以下两条命令\n" +
+            "------*号处填写工种并删掉*号！\n" +
             "找接新\n" +
-            "------需要接新请严格按照以下格式发单：\n" +
-            "------*符号处填你的信息，\n" +
-            "------圈名后的等号一定要加！\n" +
+            "查找接新*\n\n" +
+            "------接新请按以下格式填写\n" +
+            "------*号处填写个人信息并删掉*号！\n" +
+            "------记得加那个等号在你的圈名之后加！\n" +
+            "------前面几行不用写！信息由#开始：\n" +
             "#接新\n" +
             "圈名：*=\n" +
             "所接工种：*\n" +
             "备注：*\n" +
-            "有无偿或工种互换：*\n" +
+            "有偿还是工种互换：*\n" +
             "工作效率：*\n" +
             "QQ号码：*\n" +
             "发布时间：*\n" +
-            "------需要招人请严格按照以下格式发单：\n" +
-            "------*符号处填你的信息，\n" +
-            "------圈名后的等号一定要加！\n" +
+            "------需求请按以下格式填写\n" +
+            "------*号处填写个人信息并删掉*号！\n" +
+            "------记得加那个等号在你的圈名之后加！\n" +
+            "------前面几行不用写！信息由#开始：\n" +
             "#需求\n" +
             "圈名：*=\n" +
             "所需工种：*\n" +
             "备注：*\n" +
-            "有无偿或工种互换：*\n" +
+            "有偿还是工种互换：*\n" +
             "工作效率：*\n" +
             "QQ号码：*\n" +
-            "发布时间：*\n" +
-            "------需要撤回接新请按照以下格式发：\n" +
-            "------*符号处填你的信息\n" +
+            "发布时间：*\n\n" +
+            "------需要撤回接新请按照以下格式发\n" +
+            "------*符号处填你的信息并删掉*号\n" +
+            "------前面几行不用写！信息由#开始：\n" +
             "#撤回接新\n" +
             "圈名：*\n" +
-            "------需要撤回需求请按照以下格式发：\n" +
-            "------*符号处填你的信息\n" +
+            "------需要撤回需求请按照以下格式发\n" +
+            "------*符号处填你的信息并删掉*号\n" +
+            "------前面几行不用写！信息由#开始：\n" +
             "#撤回需求\n" +
-            "圈名：*";
+            "圈名：*\n\n" +
+            "请认真阅读以上信息！！！最后祝大家在群里开开心心~";
     public static long TIME = 300000;
     private static int REC_SIZE = 15;
     private static String searchWord = "";
@@ -459,9 +469,12 @@ public class Robot{
             mClipboard = (ClipboardManager) s.getSystemService(MessageSenderService.CLIPBOARD_SERVICE);
             ClipData mClip;
             mClip = ClipData.newPlainText("Adder", "欢迎" + raw.replace(" 已加入该群", "") +
-                    ",请修改群马甲（工种）昵称..注意！\n本群禁宣" +
+                    ".注意！\n本群禁宣" +
                     "本群禁宣" +
-                    "本群禁宣");
+                    "本群禁宣\n" +
+                    "请新同学先改名片：(工种)xxx 工种比如：cv、翻唱、后期、美工、填词、策划、导演、编剧等。\n" +
+                    "「什么都不会可以改交流或学习哦」\n" +
+                    "〖马甲需要帮忙的请艾特管理，告知管理工种和名字〗");
             mClipboard.setPrimaryClip(mClip);
             Log.e(TAG, "Copied " + raw);
             pending = true;
@@ -737,8 +750,56 @@ public class Robot{
         }
         addToRecord("接新名单");
     }
-    private void searchXQ (AccessibilityNodeInfo info) {}
-    private void searchJX (AccessibilityNodeInfo info) {}
+    private void searchXQ (AccessibilityNodeInfo info) {
+        Log.d(TAG, "check jarray"+needs.values());
+        String raw = info.getText().toString().replaceFirst("查找需求", "");
+        if (!record.contains("含有"+raw+"的需求名单"))
+            for (String i: needs.keySet()) {
+                if (needs.get(i).contains("工种："))
+                    if (needs.get(i).split("工种：")[1].split("\n")[0].contains(raw)) {
+                        msgLeft.add(i + "\n" + needs.get(i));
+                        Log.d(TAG, "msgLeft added" + i);
+                    }
+            }
+        if (!pending && !record.contains("含有"+raw+"的需求名单")) {
+            busy = true;
+            ClipboardManager mClipboard;
+            mClipboard = (ClipboardManager) s.getSystemService(MessageSenderService.CLIPBOARD_SERVICE);
+            ClipData mClip;
+            mClip = ClipData.newPlainText("list", "含有"+raw+"的需求名单");
+            mClipboard.setPrimaryClip(mClip);
+            Log.e(TAG, "Copied " + "含有"+raw+"的需求名单");
+            pending = true;
+            shouldWrite = true;
+            busy = false;
+        }
+        addToRecord("含有"+raw+"的需求名单");
+    }
+    private void searchJX (AccessibilityNodeInfo info) {
+        String raw = info.getText().toString().replaceFirst("查找接新", "");
+        Log.d(TAG, "check jarray"+jiexins.values());
+        if (!record.contains("含有"+raw+"的接新名单"))
+            for (String i: jiexins.keySet()) {
+                if (jiexins.get(i).contains("工种："))
+                    if (jiexins.get(i).split("工种：")[1].split("\n")[0].contains(raw)) {
+                        msgLeft.add(i + "\n" + jiexins.get(i));
+                        Log.d(TAG, "msgLeft added" + i);
+                    }
+            }
+        if (!pending && !record.contains("含有"+raw+"的接新名单")) {
+            busy = true;
+            ClipboardManager mClipboard;
+            mClipboard = (ClipboardManager) s.getSystemService(MessageSenderService.CLIPBOARD_SERVICE);
+            ClipData mClip;
+            mClip = ClipData.newPlainText("list", "含有"+raw+"的接新名单");
+            mClipboard.setPrimaryClip(mClip);
+            Log.e(TAG, "Copied " + "含有"+raw+"的接新名单");
+            pending = true;
+            shouldWrite = true;
+            busy = false;
+        }
+        addToRecord("含有"+raw+"的接新名单");
+    }
     private void addResponse (AccessibilityNodeInfo info) {
         String raw = info.getText().toString().replace("Will:#add ", "");
         Log.e(TAG, "Adder discovered: " + raw);
