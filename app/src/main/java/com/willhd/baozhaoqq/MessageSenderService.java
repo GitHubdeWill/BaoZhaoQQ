@@ -42,6 +42,7 @@ public class MessageSenderService extends AccessibilityService{
     private Robot robot;
     private long lastCheckedTime = 0;
     private boolean shouldReload = false;
+    private boolean pending = false;
 
     private static boolean group_changed = true;
 
@@ -66,6 +67,8 @@ public class MessageSenderService extends AccessibilityService{
 
     @Override
     public void onAccessibilityEvent (AccessibilityEvent event) {
+        if (pending) return;
+        pending = true;
         Log.e(TAG, "Service Started");
         Log.d(TAG, "Time last checked" + lastCheckedTime);
         Log.d(TAG, "Time now:" + System.currentTimeMillis());
@@ -83,7 +86,7 @@ public class MessageSenderService extends AccessibilityService{
             if (getRootInActiveWindow() != null) recycle(getRootInActiveWindow());
             lastCheckedTime = System.currentTimeMillis();
         }
-
+        pending = false;
 
     }
 
