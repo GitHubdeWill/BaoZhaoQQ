@@ -103,6 +103,9 @@ public class MessageSenderService extends AccessibilityService{
             Log.d(TAG, "Text：" + info.getText());
             Log.d(TAG, "windowId:" + info.getWindowId());
             Log.d(TAG, "ViewId:" + info.getViewIdResourceName());
+            Log.d(TAG, "ContentDesc:" + info.getContentDescription());
+            Log.d(TAG, "toString:" + info.toString());
+            Log.d(TAG, "Class Name:" + info);
 
             robot.onReceive(info, this);
 

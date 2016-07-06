@@ -77,51 +77,53 @@ public class Robot{
 
     //private final String QQ_TIME = "[上下]午([0-2])[0-9]:[0-5][0-9]";
 
-    private final String QQ_HELPS = "欢迎来到嘹亮古风交流群大家庭～\n" +
-            "我是机器人小饭求眼熟～\n\n" +
-            "------找需求可输入以下两条命令\n" +
-            "------*号处填写工种并删掉*号！\n" +
-            "找需求\n" +
-            "查找需求*\n" +
+    private final String QQ_JXHELP =
             "------找接新可输入以下两条命令\n" +
-            "------*号处填写工种并删掉*号！\n" +
-            "找接新\n" +
-            "查找接新*\n\n" +
-            "------接新请按以下格式填写\n" +
-            "------*号处填写个人信息并删掉*号！\n" +
-            "------记得加那个等号在你的圈名之后加！\n" +
-            "------前面几行不用写！信息由#开始：\n" +
-            "#接新\n" +
-            "圈名：*=\n" +
-            "所接工种：*\n" +
-            "备注：*\n" +
-            "有偿还是工种互换：*\n" +
-            "工作效率：*\n" +
-            "QQ号码：*\n" +
-            "发布时间：*\n" +
-            "------需求请按以下格式填写\n" +
-            "------*号处填写个人信息并删掉*号！\n" +
-            "------记得加那个等号在你的圈名之后加！\n" +
-            "------前面几行不用写！信息由#开始：\n" +
-            "#需求\n" +
-            "圈名：*=\n" +
-            "所需工种：*\n" +
-            "备注：*\n" +
-            "有偿还是工种互换：*\n" +
-            "工作效率：*\n" +
-            "QQ号码：*\n" +
-            "发布时间：*\n\n" +
-            "------需要撤回接新请按照以下格式发\n" +
-            "------*符号处填你的信息并删掉*号\n" +
-            "------前面几行不用写！信息由#开始：\n" +
-            "#撤回接新\n" +
-            "圈名：*\n" +
-            "------需要撤回需求请按照以下格式发\n" +
-            "------*符号处填你的信息并删掉*号\n" +
-            "------前面几行不用写！信息由#开始：\n" +
-            "#撤回需求\n" +
-            "圈名：*\n\n" +
-            "请认真阅读以上信息！！！最后祝大家在群里开开心心~";
+                    "------*号处填写工种并删掉*号！\n" +
+                    "找接新\n" +
+                    "查找接新***\n" +
+                    "------接新请按以下格式填写\n" +
+                    "------*号处填写个人信息并删掉*号！\n" +
+                    "------记得加那个等号在你的圈名之后加！\n" +
+                    "------前面几行不用写！信息由#开始：\n" +
+                    "#接新\n" +
+                    "圈名：***=\n" +
+                    "所接工种：***\n" +
+                    "备注：***\n" +
+                    "有偿还是工种互换：***\n" +
+                    "工作效率：***\n" +
+                    "QQ号码：***\n" +
+                    "发布时间：***\n" +
+                    "------需要撤回接新请按照以下格式发\n" +
+                    "------*符号处填你的信息并删掉*号\n" +
+                    "------前面几行不用写！信息由#开始：\n" +
+                    "#撤回接新\n" +
+                    "圈名：***";
+    private final String QQ_XQHELP =
+            "------找需求可输入以下两条命令\n" +
+                    "------*号处填写工种并删掉*号！\n" +
+                    "找需求\n" +
+                    "查找需求***\n" +
+                    "------需求请按以下格式填写\n" +
+                    "------*号处填写个人信息并删掉*号！\n" +
+                    "------记得加那个等号在你的圈名之后加！\n" +
+                    "------前面几行不用写！信息由#开始：\n" +
+                    "#需求\n" +
+                    "圈名：***=\n" +
+                    "所需工种：***\n" +
+                    "备注：*\n" +
+                    "有偿还是工种互换：*\n" +
+                    "工作效率：***\n" +
+                    "QQ号码：***\n" +
+                    "发布时间：*\n" +
+                    "------需要撤回需求请按照以下格式发\n" +
+                    "------*符号处填你的信息并删掉*号\n" +
+                    "------前面几行不用写！信息由#开始：\n" +
+                    "#撤回需求\n" +
+                    "圈名：***";
+    private final String QQ_HELPS =
+            "欢迎来到嘹亮古风交流群大家庭～\n" +
+            "我是机器人小饭求眼熟～\n\n" + QQ_JXHELP + "\n\n" + QQ_XQHELP + "\n\n请认真阅读以上信息！！！最后祝大家在群里开开心心~";
     public static long TIME = 300000;
     private static int REC_SIZE = 15;
     private static String searchWord = "";
@@ -515,8 +517,21 @@ public class Robot{
             busy = false;
         }
     }
-    private void showHelp (){
-        String raw = QQ_HELPS;
+    private void showHelp (int k){
+        String raw;
+        switch (k) {
+            case 1:
+                raw = QQ_HELPS;
+                break;
+            case 2:
+                raw = QQ_JXHELP;
+                break;
+            case 3:
+                raw = QQ_XQHELP;
+                break;
+            default:
+                raw = "Invalid comm";
+        }
         if (!pending && !record.contains(raw)) {
             busy = true;
             ClipboardManager mClipboard;
@@ -1086,7 +1101,11 @@ public class Robot{
                         showResponse();
                     //show help
                     if (info.getText().toString().equals(QQ_HELP) && !record.contains(QQ_HELP))
-                        showHelp();
+                        showHelp(1);
+                    if (info.getText().toString().equals("接新") && !record.contains("接新"))
+                        showHelp(2);
+                    if (info.getText().toString().equals("需求") && !record.contains("需求"))
+                        showHelp(3);
                     //显示需求
                     if (info.getText().toString().equals("找需求") && !record.contains("找需求"))
                         findXQ();
