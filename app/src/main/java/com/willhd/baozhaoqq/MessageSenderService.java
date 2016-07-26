@@ -5,6 +5,7 @@ import android.accessibilityservice.AccessibilityService;
 import android.annotation.TargetApi;
 import android.app.Activity;
 import android.app.AlertDialog;
+import android.app.Notification;
 import android.content.ClipData;
 import android.content.ClipboardManager;
 import android.content.DialogInterface;
@@ -44,7 +45,6 @@ public class MessageSenderService extends AccessibilityService{
     private boolean shouldReload = false;
     private boolean pending = false;
 
-    private static boolean group_changed = true;
 
     @TargetApi(23)
     private boolean checkPermission() {
@@ -67,11 +67,14 @@ public class MessageSenderService extends AccessibilityService{
 
     @Override
     public void onAccessibilityEvent (AccessibilityEvent event) {
+        Notification notification = new Notification();
+        notification.flags = Notification.FLAG_ONGOING_EVENT;
+        notification.flags |= Notification.FLAG_NO_CLEAR;
+        notification.flags |= Notification.FLAG_FOREGROUND_SERVICE;
+        this.startForeground(1, notification);
         if (pending) return;
         pending = true;
         Log.e(TAG, "Service Started");
-        Log.d(TAG, "Time last checked" + lastCheckedTime);
-        Log.d(TAG, "Time now:" + System.currentTimeMillis());
         if (lastCheckedTime == 0) lastCheckedTime = System.currentTimeMillis();
         if (!checkPermission()) return;
         if(robot == null || shouldReload) {
@@ -105,7 +108,6 @@ public class MessageSenderService extends AccessibilityService{
             Log.d(TAG, "ViewId:" + info.getViewIdResourceName());
             Log.d(TAG, "ContentDesc:" + info.getContentDescription());
             Log.d(TAG, "toString:" + info.toString());
-            Log.d(TAG, "Class Name:" + info);
 
             robot.onReceive(info, this);
 
@@ -120,6 +122,12 @@ public class MessageSenderService extends AccessibilityService{
 
     @Override
     public void onInterrupt () {
+        Log.e(TAG, "Interrupted");
+    }
 
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        Log.e(TAG, "Destroyed");
     }
 }

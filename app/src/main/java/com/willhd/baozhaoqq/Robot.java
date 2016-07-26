@@ -48,79 +48,81 @@ import javax.crypto.AEADBadTagException;
  */
 public class Robot{
     private final String TAG = "Robot";
+
     private final String QQ_NAME_PAT = "[^`]{1,255}:";
+
     private final String QQ_ADD_RESP = "Will:#add [^:]{1,255}::[^:]{1,255}";
-    private final String QQ_NEWBIE = "[^`]{1,64} 已加入该群";
+    private final String QQ_COMM = "Will:说[^:]{1,255}";
+    //private final String QQ_RECOVER = "Will:[^:]{1,255}";
+    private final String QQ_NAMEFORMAT = "[（\\(][^\\(^（^\\)）]{1,64}[）\\)][^\\(^\\)]{1,64}:";
+    private final String QQ_NEWBIE = "[^`]{1,64} 已加入该群";//
     private final String QQ_JIEXIN = "#接新\n[^#]{1,255}";
     private final String QQ_XUQIU = "#需求\n[^#]{1,255}";
-    private final String QQ_RECALLN = "#撤回需求\n[^#]{1,255}";
     private final String QQ_RECALLJ = "#撤回接新\n[^#]{1,255}";
+    private final String QQ_RECALLN = "#撤回需求\n[^#]{1,255}";
+    private final String QQ_FINDJX = "查找接新[^:]{1,255}";
+    private final String QQ_FINDXQ = "查找需求[^:]{1,255}";
+    private final String QQ_CIRNAME = "圈名[:：][^:]{1,64}";
     private final String QQ_AD = "[^测^接^需]{0,255}[a-zA-Z0-9]{1,255}\\.[a-zA-Z0-9]{1,255}\\.[a-zA-Z0-9]{1,64}[^测^接^需]{0,255}";
     private final String QQ_XUAN = "[^测^接^需]{0,255}宣[^测^接^需]{0,255}";
     private final String QQ_NUM = "[^测^接^需]{0,255}[0-9]{7,255}[^测^接^需]{0,255}";
+    private final String QQ_JINXUAN = "检测到宣传！\n本群禁宣请立即撤回！";
+    private final String QQ_ADMIN = "饭管理群-[^:]{1,64}:[^`]{1,255}";
     private final String QQ_TEACH = "说[^:]{1,255}";
     private final String QQ_SETTIME = "定时[0-9]{1,64}";
     private final String QQ_BLACKLIST = "黑名单[^:]{1,255}";
     private final String QQ_RBLACKLIST = "移除黑名单[^:]{1,255}";
+    private final String QQ_JUMP = "跳去[^:]{1,64}";
     private final String QQ_ENG = "小饭[a-zA-Z0-9 ,\\.\\?!'-]{1,64}";
-    private final String QQ_COMM = "Will:说[^:]{1,255}";
-    private final String QQ_CIRNAME = "圈名[:：][^:]{1,64}";
-    //private final String QQ_RECOVER = "Will:[^:]{1,255}";
-    private final String QQ_NAMEFORMAT = "[（\\(][^\\(^（^\\)）]{1,64}[）\\)][^\\(^\\)]{1,64}:";
+    private final String QQ_SEARCH = "什么是[^`]{1,255}";
     private final String QQ_HELP = "二狗";
     private final String QQ_SEND = "发送";
-    private final String QQ_JINXUAN = "检测到宣传！\n本群禁宣请立即撤回！";
-    private final String QQ_SEARCH = "什么是[^`]{1,255}";
-    private final String QQ_ADMIN = "饭管理群-[^:]{1,64}:[^`]{1,255}";
-    private final String QQ_FINDJX = "查找接新[^:]{1,255}";
-    private final String QQ_FINDXQ = "查找需求[^:]{1,255}";
-
-    //private final String QQ_TIME = "[上下]午([0-2])[0-9]:[0-5][0-9]";
+    private final String QQ_GROUP = "-[^:]{1,64}:[^`]{1,255}";
 
     private final String QQ_JXHELP =
             "------找接新可输入以下两条命令\n" +
-                    "------*号处填写工种并删掉*号！\n" +
-                    "找接新\n" +
-                    "查找接新***\n" +
-                    "------接新请按以下格式填写\n" +
-                    "------*号处填写个人信息并删掉*号！\n" +
-                    "------记得加那个等号在你的圈名之后加！\n" +
-                    "------前面几行不用写！信息由#开始：\n" +
-                    "#接新\n" +
-                    "圈名：***=\n" +
-                    "所接工种：***\n" +
-                    "备注：***\n" +
-                    "有偿还是工种互换：***\n" +
-                    "工作效率：***\n" +
-                    "QQ号码：***\n" +
-                    "发布时间：***\n" +
-                    "------需要撤回接新请按照以下格式发\n" +
-                    "------*符号处填你的信息并删掉*号\n" +
-                    "------前面几行不用写！信息由#开始：\n" +
-                    "#撤回接新\n" +
-                    "圈名：***";
+            "------*号处填写工种并删掉*号！\n" +
+            "找接新\n" +
+            "查找接新***\n" +
+            "------接新请按以下格式填写\n" +
+            "------*号处填写个人信息并删掉*号！\n" +
+            "------记得加那个等号在你的圈名之后加！\n" +
+            "------前面几行不用写！信息由#开始：\n" +
+            "#接新\n" +
+            "圈名：***=\n" +
+            "所接工种：***\n" +
+            "备注：***\n" +
+            "有偿还是工种互换：***\n" +
+            "工作效率：***\n" +
+            "QQ号码：***\n" +
+            "发布时间：***\n" +
+            "------需要撤回接新请按照以下格式发\n" +
+            "------*符号处填你的信息并删掉*号\n" +
+            "------前面几行不用写！信息由#开始：\n" +
+            "#撤回接新\n" +
+            "圈名：***";
     private final String QQ_XQHELP =
             "------找需求可输入以下两条命令\n" +
-                    "------*号处填写工种并删掉*号！\n" +
-                    "找需求\n" +
-                    "查找需求***\n" +
-                    "------需求请按以下格式填写\n" +
-                    "------*号处填写个人信息并删掉*号！\n" +
-                    "------记得加那个等号在你的圈名之后加！\n" +
-                    "------前面几行不用写！信息由#开始：\n" +
-                    "#需求\n" +
-                    "圈名：***=\n" +
-                    "所需工种：***\n" +
-                    "备注：*\n" +
-                    "有偿还是工种互换：*\n" +
-                    "工作效率：***\n" +
-                    "QQ号码：***\n" +
-                    "发布时间：*\n" +
-                    "------需要撤回需求请按照以下格式发\n" +
-                    "------*符号处填你的信息并删掉*号\n" +
-                    "------前面几行不用写！信息由#开始：\n" +
-                    "#撤回需求\n" +
-                    "圈名：***";
+            "------*号处填写工种并删掉*号！\n" +
+            "找需求\n" +
+            "查找需求***\n" +
+            "------需求请按以下格式填写\n" +
+            "------*号处填写个人信息并删掉*号！\n" +
+            "------记得加那个等号在你的圈名之后加！\n" +
+            "------前面几行不用写！信息由#开始：\n" +
+            "#需求\n" +
+            "圈名：***=\n" +
+            "所需工种：***\n" +
+            "备注：*\n" +
+            "有偿还是工种互换：*\n" +
+            "工作效率：***\n" +
+            "QQ号码：***\n" +
+            "发布时间：*\n" +
+            "------需要撤回需求请按照以下格式发\n" +
+            "------*符号处填你的信息并删掉*号\n" +
+            "------前面几行不用写！信息由#开始：\n" +
+            "#撤回需求\n" +
+            "圈名：***";
     private final String QQ_HELPS =
             "欢迎来到嘹亮古风交流群大家庭～\n" +
             "我是机器人小饭求眼熟～\n\n" + QQ_JXHELP + "\n\n" + QQ_XQHELP + "\n\n请认真阅读以上信息！！！最后祝大家在群里开开心心~";
@@ -128,6 +130,7 @@ public class Robot{
     private static int REC_SIZE = 15;
     private static String searchWord = "";
     private static String question = "";
+    private static String pendingGroup = "";
     private static int msgCount = 0;
     private static Queue<String> msgLeft = new ArrayBlockingQueue<>(500);
 
@@ -474,7 +477,7 @@ public class Robot{
                     ".注意！\n本群禁宣" +
                     "本群禁宣" +
                     "本群禁宣\n" +
-                    "请新同学先改名片：(工种)xxx 工种比如：cv、翻唱、后期、美工、填词、策划、导演、编剧等。\n" +
+                    "请新同学先改名片：(工种)xxx \n工种比如：cv、翻唱、后期、美工、填词、策划、导演、编剧等。\n" +
                     "「什么都不会可以改交流或学习哦」\n" +
                     "〖马甲需要帮忙的请艾特管理，告知管理工种和名字〗");
             mClipboard.setPrimaryClip(mClip);
@@ -565,7 +568,7 @@ public class Robot{
         for (int i = 0; i < blackList.size(); i++) {
             String check = "[^#]{0,255}" + blackList.get(i) + "[^#]{0,255}";
             if (Pattern.compile(check).matcher(raw).matches())
-                raw = "检测到敏感词，小饭不说！";
+                raw = "经过一系列思想斗争，小饭决定不说！";
         }
         lastKey = raw;
         Log.d(TAG, "saying " + raw);
@@ -638,6 +641,10 @@ public class Robot{
             case 3:
                 blackList.remove(cont.replaceFirst("移除黑名单", ""));
                 raw = "已完成操作";
+                break;
+            case 4:
+                pendingGroup = cont.replaceFirst("跳去", "");
+                raw = "小饭已准备好穿梭！目标"+pendingGroup;
                 break;
             default:
                 raw = "出错";
@@ -714,17 +721,17 @@ public class Robot{
         busy = false;
     }
     private void askDone (String res){
-            busy = true;
-            ClipboardManager mClipboard;
-            mClipboard = (ClipboardManager) s.getSystemService(MessageSenderService.CLIPBOARD_SERVICE);
-            ClipData mClip;
-            mClip = ClipData.newPlainText("search", res);
-            mClipboard.setPrimaryClip(mClip);
-            Log.e(TAG, "Copied " + res);
-            pending = true;
-            shouldWrite = true;
-            busy = false;
-        }
+        busy = true;
+        ClipboardManager mClipboard;
+        mClipboard = (ClipboardManager) s.getSystemService(MessageSenderService.CLIPBOARD_SERVICE);
+        ClipData mClip;
+        mClip = ClipData.newPlainText("search", res);
+        mClipboard.setPrimaryClip(mClip);
+        Log.e(TAG, "Copied " + res);
+        pending = true;
+        shouldWrite = true;
+        busy = false;
+    }
     private void findXQ () {
         Log.d(TAG, "check narray"+needs.keySet().toString());
         for (String i: needs.keySet()) {
@@ -846,8 +853,16 @@ public class Robot{
     private void addJiexin (AccessibilityNodeInfo info) {
         String raw = info.getText().toString();
         Log.e(TAG, "Jiexin discovered: " + raw);
-        if (raw.split("=").length < 2) {
+        if (raw.split("=").length < 2 || raw.contains("*")) {
             Log.e(TAG, "Copied Error");
+            ClipboardManager mClipboard;
+            mClipboard = (ClipboardManager) s.getSystemService(MessageSenderService.CLIPBOARD_SERVICE);
+            ClipData mClip;
+            mClip = ClipData.newPlainText("Jiexin", "格式错误，请检查");
+            mClipboard.setPrimaryClip(mClip);
+            Log.e(TAG, "Copied " + raw);
+            pending = true;
+            shouldWrite = true;
         } else {
             if (!jiexins.containsKey(raw.split("=")[0].replace("#接新\n", "")) && !pending) {
                 busy = true;
@@ -878,7 +893,16 @@ public class Robot{
     private void addXuqiu (AccessibilityNodeInfo info) {
         String raw = info.getText().toString();
         Log.e(TAG, "Xuqiu discovered: " + raw);
-        if (raw.split("=").length < 2) {
+        if (raw.split("=").length < 2|| raw.contains("*")) {
+            Log.e(TAG, "Copied Error");
+            ClipboardManager mClipboard;
+            mClipboard = (ClipboardManager) s.getSystemService(MessageSenderService.CLIPBOARD_SERVICE);
+            ClipData mClip;
+            mClip = ClipData.newPlainText("需求", "格式错误，请检查");
+            mClipboard.setPrimaryClip(mClip);
+            Log.e(TAG, "Copied " + raw);
+            pending = true;
+            shouldWrite = true;
             Log.e(TAG, "Copied Error");
         } else {
             if (!needs.containsKey(raw.split("=")[0].replace("#需求\n", "")) && !pending) {
@@ -1093,6 +1117,7 @@ public class Robot{
                         if (Pattern.compile(QQ_SETTIME).matcher(comm).matches()) shuoAdmin(comm, 2);
                         if (Pattern.compile(QQ_RBLACKLIST).matcher(comm).matches())
                             shuoAdmin(comm, 3);
+                        if (Pattern.compile(QQ_JUMP).matcher(comm).matches()) shuoAdmin(comm, 4);
                     }
 
 
@@ -1134,6 +1159,19 @@ public class Robot{
                     //Recall Jiexin
                     if (Pattern.compile(QQ_RECALLJ).matcher(info.getText().toString()).matches())
                         recallJiexin(info);
+                    if (Pattern.compile(pendingGroup.replace("(", "\\(").replace(")", "\\)")+QQ_GROUP).matcher(info.getText().toString()).matches()) {
+                        info.performAction(AccessibilityNodeInfo.ACTION_CLICK);
+                        busy = true;
+                        ClipboardManager mClipboard;
+                        mClipboard = (ClipboardManager) s.getSystemService(MessageSenderService.CLIPBOARD_SERVICE);
+                        ClipData mClip;
+                        mClip = ClipData.newPlainText("list","小饭我穿越啦！");
+                        mClipboard.setPrimaryClip(mClip);
+                        Log.e(TAG, "Copied " + "穿越"+info.getText().toString());
+                        pending = true;
+                        shouldWrite = true;
+                        busy = false;
+                    }
                 } else {
                     if (!pending) {
                         String raw = msgLeft.poll();
